@@ -1,0 +1,44 @@
+#!/bin/bash
+
+MINIMODEM="${MINIMODEM-./minimodem}"
+[ -f "$MINIMODEM" ] || {
+    MINIMODEM="../src/minimodem"
+    [ -f "$MINIMODEM" ] || {
+	echo "E: cannot find minimodem in ./ or ../src/" 1>&2
+	exit 1
+    }
+}
+
+minimodem_tx_args="1200 $1"
+
+textfile="testdata-ascii.txt"
+
+TMPF="/tmp/minimodem-test-$$"
+trap "rm -f $TMPF.*" 0
+
+set -e
+
+$MINIMODEM --tx --file $TMPF.1.wav $minimodem_tx_args < "$textfile"
+sleep 1
+$MINIMODEM --tx --file $TMPF.2.wav $minimodem_tx_args < "$textfile"
+sleep 1
+$MINIMODEM --tx --file $TMPF.3.wav $minimodem_tx_args < "$textfile"
+
+cmp -s $TMPF.1.wav $TMPF.2.wav || {
+    echo -e "TX-NOT-CONSISTENT"
+    exit 1
+}
+
+cmp -s $TMPF.1.wav $TMPF.3.wav || {
+    echo -e "TX-NOT-CONSISTENT"
+    exit 1
+}
+
+stats="three runs of '--tx $minimodem_tx_args' created identical output"
+
+result="OK     "
+exitcode=0
+
+echo -e "$result $stats"
+
+exit $exitcode

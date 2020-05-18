@@ -1,0 +1,246 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH MINIMODEM 1 "June 10, 2013"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+minimodem \- general-purpose software audio FSK modem
+.SH SYNOPSIS
+.B minimodem --tx
+.RI [ options ]
+.I {baudmode}
+.br
+.B minimodem --rx
+.RI [ options ]
+.I {baudmode}
+.SH DESCRIPTION
+.B Minimodem
+is a command-line program which decodes (or generates) audio
+modem tones at any specified baud rate, using various framing protocols.
+It acts a general-purpose software FSK modem, and includes support for
+various standard FSK protocols such as Bell103, Bell202, RTTY, TTY/TDD,
+NOAA SAME, and Caller-ID.
+.PP
+.B Minimodem
+can play and capture audio modem tones in real-time via the system
+audio device, or in batched mode via audio files.
+.PP
+.B Minimodem
+can be used to transfer data between nearby computers using an
+audio cable (or just via sound waves), or between remote computers using
+radio, telephone, or another audio communications medium.
+.SH "TX/RX MODE"
+.TP
+.B \-t, \-\-tx, \-\-transmit, \-\-write
+transmit mode: generate audio tones
+.TP
+.B \-r, \-\-rx, \-\-receive,  \-\-read
+receive mode: decode audio tones
+.SH {baudmode}
+The required \fI{baudmode}\fR parameter may be any floating-point value to
+specify a baud rate, or any of the special keywords listed below.
+The \fI{baudmode}\fR also implies certain other parameter defaults
+depending on the rate, including standard (or at least reasonable)
+default mark and space tone frequencies.
+.TP
+.B  {any floating point value N}
+: Bell202-style at N bps \-\-ascii
+.TP
+.B    1200
+: Bell202 1200 bps \-\-ascii
+.TP
+.B     300
+: Bell103 300 bps \-\-ascii
+.TP
+.B    rtty
+: RTTY 45.45 bps \-\-baudot \-\-stopbits 1.5
+.TP
+.B    tdd
+: TTY/TDD 45.45 bps \-\-baudot \-\-stopbits 2.0
+.TP
+.B    same
+: SAME 520.83 bps \-\-startbits 0 \-\-stopbits 0 \-\-sync-byte 0xAB
+.br
+	NOAA Specific Area Message Encoding (SAME) protocol
+.TP
+.B    callerid
+: Bell202 1200 bps Caller-ID (MDMF or SDMF) protocol
+.TP
+.B    uic-train
+: UIC-751-3 600 bps train-to-ground message protocol
+.TP
+.B    uic-ground
+: UIC-751-3 600 bps ground-to-train message protocol
+.SH OPTIONS
+.TP
+.B \-a, \-\-auto-carrier
+Automatically detect mark and space frequences from carrier.
+.TP
+.B \-i, \-\-inverted
+Invert the mark and space frequencies (applies whether the
+frequencies are defaults, discovered by \-\-auto-carrier,
+or specified manually).
+.TP
+.B \-c, \-\-confidence min-confidence-threshold
+Set receive confidence minimum threshold (default 1.5).
+The "confidence" value is a metric based primarily on
+the SNR (signal-to-noise ratio) of the received signal.
+This value acts as an FSK decoder "squelch" control.
+Increase to accept only very clean signals (up to INFINITY, but
+a value around 5.0 is more practical).  Decrease to accept partial
+decoding of noisy signals (down to a minimum value of 1.0).
+(This option applies to \-\-rx mode only).
+.B \-l, \-\-limit max-confidence-search-limit
+Set receive confidence maximum search limit (default 2.3).
+The "confidence" value is as described above.
+This value acts as a performance vs. analysis quality control.
+Increase (up to INFINITY) for a more pedantic analysis
+and higher CPU usage.  Decrease (down to the min-confidence-threshold)
+for a sloppier analysis, with lower CPU usage.
+(This option applies to \-\-rx mode only).
+.TP
+.B \-8, \-\-ascii
+ASCII  8\-N\-1
+.TP
+.B \-5, \-\-baudot
+Baudot 5\-N\-1.5
+.TP
+.B \-f, \-\-file filename.wav
+encode or decode an audio file (extension sets audio format)
+.TP
+.B \-b, \-\-bandwidth {rx_bandwidth}
+.TP
+.B \-v, \-\-volume {tx_amplitude or 'E'}
+Sets the generated signal amplitude (default is 1.0).  As a special case
+useful for testing, the value 'E' sets the amplitude to the very small value
+FLT_EPSILON.  (This option applies to \-\-tx mode only).
+.TP
+.B \-M, \-\-mark {mark_freq}
+.TP
+.B \-S, \-\-space {space_freq}
+.TP
+.B \-\-startbits {n}
+Sets the number of start bits (default is 1 for most baudmodes).
+.TP
+.B \-\-stopbits {n.n}
+Sets the number of stop bits (default is 1.0 for most baudmodes).
+.TP
+.B \-\-sync-byte {0xXX}
+If this option is used, initial carrier acquisition will be suppressed
+until after one or more consecutive data frame(s) containing this value
+are received.  This can be used to synchronize the stream for protocols
+which include a fixed preamble byte.
+(This option applies to \-\-rx mode only).
+.TP
+.B \-q, \-\-quiet
+Do not report CARRIER / NOCARRIER or signal analysis metrics.
+.TP
+.B \-R, \-\-samplerate {rate}
+Set the audio sample rate (default rate is 48000 Hz).
+.TP
+.B \-A, \-\-alsa[={plughw:X,Y | X,Y | X }]
+Use ALSA as the audio output system instead of the default
+PulseAudio (depending on build configuration options).  The ALSA
+device alias "default" is used, if a specific device is not specified.
+For example, the following options all select ALSA device #1, sub-device #0:
+ \-\-alsa=plughw:1,0  \-\-alsa=1,0  \-A1
+.TP
+.B \-\-lut={tx_sin_table_len}
+Minimodem uses a precomputed sine wave lookup table of 1024 elements,
+or the size specified here.  Use \-\-lut=0 to disable the use of
+the sine wave lookup table.  (This option applies to \-\-tx mode only).
+.TP
+.B \-\-float-samples
+Generate 32-bit floating-point format audio samples, instead of the
+default 16-bit signed integer format (applies to \-\-tx mode only;
+\-\-rx mode always uses 32-bit floating-point).
+.TP
+.B \-\-rx-one
+Quit after the first carrier/no-carrier event (applies to \-\-rx mode only).
+.TP
+.B \-\-binary-output
+Print received data bits as raw binary output using characters '0' and '1'.
+The bits are printed in the order they are received.  Framing bits (start
+and stop bits) are omitted from the output.
+(This option applies to \-\-rx mode only).
+.TP
+.B \-\-binary-raw {nbits}
+Print all received bits (data bits and any framing bits) as raw binary output
+using characters '0' and '1'.  Framing bits are not interpreted, but simply
+passed through to the output.  The bits are printed in the order they are
+received, in lines {nbits} wide.  So in order to display a standard 8-N-1
+bitstream (8 databits + 1 start bit + 1 stop bit), use "--binary-raw 10"
+ or a multiple of 10.
+(This option applies to \-\-rx mode only).
+.TP
+.B \-\-print-filter
+Filter the received text output, replacing any "non-printable" bytes
+with a '.' character.
+(This option applies to \-\-rx mode only).
+.TP
+.B \-\-print-eot
+Print "### EOT" to stderr after each transmit completes.
+.TP
+.B \-\-tx-carrier
+When transmitting from a blocking source, keep a carrier going while waiting
+for more data.
+.TP
+.B \-\-benchmarks
+Run and report internal performance tests (all other flags are ignored).
+.TP
+.B \-V, \-\-version
+print program version
+.SH EXAMPLES
+.TP
+.B minimodem --tx 100
+Transmit 100 baud tones from one computer ...
+.TP
+.B minimodem --rx 100
+and receive 100 baud tones on another nearby computer.
+.TP
+.B minimodem --rx -a rtty
+Decode amateur radio RTTY signals (listen near 14.085 MHz).
+.TP
+.B minimodem --rx same
+Decode NOAA SAME protocol emergency alert transmissions, e.g.
+.br
+<http://en.wikipedia.org/wiki/Specific_Area_Message_Encoding>.
+.TP
+.B minimodem --tx 0.5
+Experiment with very low baud rates (works in noisy conditions).
+.TP
+.B minimodem --tx 12000
+Experiment with very high baud rates (works with audio files).
+.SH NOTES
+.B minimodem
+does not decode AX.25 framed packets.
+.PP
+.B minimodem
+does not support modem control ("AT") commands, nor does it produce
+DTMF telephone dialing tones.
+.SH VERSION
+This page documents
+.B minimodem
+version @PACKAGE_VERSION@.
+The latest version is available at <http://www.whence.com/minimodem>.
+.SH AUTHOR
+.B minimodem
+was written by Kamal Mostafa <kamal@whence.com>.
+.SH COPYRIGHT
+Copyright \(co 2011-2016 by Kamal Mostafa <kamal@whence.com>.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+.br
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.

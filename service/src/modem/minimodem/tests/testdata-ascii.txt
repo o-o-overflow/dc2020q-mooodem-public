@@ -1,0 +1,17 @@
+This is a minimodem ascii data test file.
+
+http://www.whence.com/minimodem/
+
+THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG
+the quick brown fox jumps over the lazy dog
+1234567890 !@#$%^&*()-=_+`~[]\;',./{}|:"<>? tab>	<tab
+
+----------------------------------------------------------------------------
+
+	"Airbus", a haiku by Kamal Mostafa <kamal@whence.com>
+
+	Aluminum tube
+	Three hundred twenty sardines
+	Earning our SkyMiles
+
+----------------------------------------------------------------------------

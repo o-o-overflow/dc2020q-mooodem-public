@@ -1,0 +1,14 @@
+#!/bin/sh
+IMAGE_FILE="$1"
+echo "Connection Established. Stand by..."
+timeout -k1 1200 \
+stdbuf -i0 -o0 -e0 \
+/killondisconnect \
+/usr/bin/qemu-system-i386 -M isapc -drive index=0,if=floppy,format=raw,file=$IMAGE_FILE \
+  -nographic \
+  -monitor none \
+  -no-reboot \
+  -nodefaults -snapshot \
+  -chardev stdio,id=char0,mux=off,signal=off -serial chardev:char0 \
+  -sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny \
+  -m 32M

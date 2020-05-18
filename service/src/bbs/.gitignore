@@ -1,0 +1,11 @@
+dockbuild-ia16
+env/
+*.EXE
+*.COM
+*.MAP
+a.out
+AUTOEXEC.BAT
+FILES.TXT
+FLAG.TXT
+BBS.IMG
+BBS.ZIP

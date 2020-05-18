@@ -1,0 +1,5 @@
+#!/bin/sh
+# Entrypoint for service launch
+exec 2>/dev/null
+# ./wrapper_qemu $IMAGE_COPY # Launch Directly
+./wrapper_modem ./wrapper_qemu BBS.IMG

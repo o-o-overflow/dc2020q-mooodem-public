@@ -1,0 +1,29 @@
+#!/bin/bash
+
+let rx_rate=300
+
+let count=0
+let fail=0
+
+function try_tx_rx_rate
+{
+    txr=$1
+    echo -n "$txr "
+    let count++
+    ./self-test testdata-ascii.txt $txr -- $rx_rate || let fail++
+}
+
+# for adj in  -8 -5 -3 -2 -1 0 +1 +2 +3 +5 +8
+for adj in  -8 -1 0 +1 +8
+do
+    let tx_rate="rx_rate + adj"
+    try_tx_rx_rate $tx_rate
+done
+
+if [ $fail -eq 0 ]
+then
+echo "  (all $count rate-slop tests passed)"
+else
+echo "  ($fail/$count rate-slop tests failed)"
+fi
+exit $fail

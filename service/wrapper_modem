@@ -1,0 +1,5 @@
+#!/bin/sh
+stdbuf -i0 -o0 -e0 ./minimodem -r 1200 --float-samples -R 48000 -q -f - | \
+"$@" | \
+./minimodem -t 1200 --float-samples -R 48000 -f - | \
+pv -L 2M

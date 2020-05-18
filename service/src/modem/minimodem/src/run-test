@@ -1,0 +1,51 @@
+#!/bin/bash
+# 
+# run-test
+# 
+# Copyright (C) 2011-2012 Kamal Mostafa <kamal@whence.com>
+# 
+# NO LICENSE HAS BEEN SPECIFIED OR GRANTED FOR THIS WORK.
+# 
+# 
+
+MINIMODEM="${MINIMODEM-./minimodem}"
+
+TMPDIR=/tmp/run-test-$$
+mkdir "$TMPDIR" || exit
+trap "rm -rf $TMPDIR" 0
+
+let nfail=0
+
+for i in ../testdata/*/*.flac
+do
+    dir="${i%/*}"
+
+    f="${i##*/}"
+    rate="${f#*-}"
+    rate="${rate%%-*}"
+
+    txtnum="${i##*/}"
+    txtnum="${txtnum%%-*}"
+
+    unset flags
+    [ $rate = rtty ] || [ $rate -le 300 ] && flags="--auto-carrier"
+    echo TEST	$MINIMODEM $flags -f "$i" "$rate" 
+    $MINIMODEM $flags -f "$i" "$rate"  >$TMPDIR/out 2>$TMPDIR/err
+
+    t="${f%%-*}"
+
+    egrep 'CARRIER|TONE' $TMPDIR/err
+    cmp $dir/${txtnum}-*.txt $TMPDIR/out
+    if [ $? -eq 0 ]
+    then
+	echo "@@@ PASS $f"
+    else
+	echo "						@@@ FAIL $f"
+	let nfail=nfail+1
+    fi
+
+    echo
+done
+
+exit $nfail
+

@@ -1,0 +1,88 @@
+#!/bin/bash
+
+MINIMODEM="${MINIMODEM-./minimodem}"
+[ -f "$MINIMODEM" ] || {
+    MINIMODEM="../src/minimodem"
+    [ -f "$MINIMODEM" ] || {
+	echo "E: cannot find minimodem in ./ or ../src/" 1>&2
+	exit 1
+    }
+}
+
+test_perfect=0
+[ "$1" = "-P" ] && {
+    test_perfect=1
+    shift
+}
+
+[ $# -ge 2 ] || {
+    echo "usage: self-test [-P] textfile minimodem_tx_args [ -- minimodem_rx_args ]" 1>&2
+    exit 1
+}
+textfile="$1"
+shift
+
+minimodem_tx_args="$1"
+shift
+while [ $# -gt 0 ]
+do
+    [ "$1" = "--" ] && {
+	shift
+	break
+    }
+    minimodem_tx_args="$minimodem_tx_args $1"
+    shift
+done
+if [ $# -gt 0 ]
+then
+    minimodem_rx_args="$*"
+else
+    minimodem_rx_args="$minimodem_tx_args"
+fi
+
+
+TMPF="/tmp/minimodem-test-$$"
+trap "rm -f $TMPF.*" 0
+
+set -e
+#echo
+#echo "$MINIMODEM --tx ... $minimodem_tx_args"
+#echo "$MINIMODEM --rx ... $minimodem_rx_args"
+
+$MINIMODEM --tx --file $TMPF.wav $minimodem_tx_args < "$textfile"
+
+# cp $TMPF.wav /tmp/x.wav
+
+$MINIMODEM --rx --file $TMPF.wav $minimodem_rx_args \
+	> $TMPF.out 2> $TMPF.err || {
+    cat $TMPF.err
+    exit 1
+}
+
+cmp "$textfile" $TMPF.out
+
+{
+    read xlitcarrier
+    read xlitblankline
+    read xlithashes xlitnocarrier stats
+    stats="${stats% ###}"
+} < $TMPF.err
+
+
+result="OK     "
+exitcode=0
+
+[ $test_perfect -eq 1 ] && {
+    match="confidence=inf .* (rate perfect)"
+    if grep -q "$match" $TMPF.err
+    then
+	result="PERFECT"
+    else
+	result="IMPERFECT"
+	exitcode=1
+    fi
+}
+
+echo -e "$result $stats"
+
+exit $exitcode
